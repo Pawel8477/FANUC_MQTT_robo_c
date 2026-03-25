@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FANUC MQTT Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">FANUC MQTT</p>
+          <h1>Production Dashboard</h1>
+          <p class="subtitle">Live view and process-flow analysis built on the PostgreSQL archive fed by the MQTT collector.</p>
+        </div>
+        <div class="refresh-pill">Auto refresh: {{ refresh_seconds }}s</div>
+      </section>
+
+      <section class="tabs">
+        <button class="tab-button is-active" data-tab="overview" type="button">Overview</button>
+        <button class="tab-button" data-tab="process" type="button">Process Flow</button>
+        <button class="tab-button" data-tab="oee" type="button">Process & OEE</button>
+      </section>
+
+      <section id="tab-overview" class="tab-panel is-active">
+        <section class="card-grid">
+          <article class="card stat-card">
+            <span class="stat-label">Total messages</span>
+            <strong id="total-messages">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Unique topics</span>
+            <strong id="unique-topics">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Messages last 15 min</span>
+            <strong id="messages-last-15m">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Last received</span>
+            <strong id="last-received">-</strong>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="card">
+            <div class="card-header">
+              <h2>Latest message</h2>
+            </div>
+            <div class="latest-message">
+              <div class="latest-topic" id="latest-topic">-</div>
+              <pre id="latest-payload">-</pre>
+              <div class="muted" id="latest-time">-</div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h2>Top sites</h2>
+            </div>
+            <div id="top-sites" class="list"></div>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="card-header controls">
+            <h2>Recent messages</h2>
+            <div class="filters">
+              <input id="topic-filter" type="text" placeholder="Filter by topic..." />
+              <select id="message-limit">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+              </select>
+              <button id="apply-filter" type="button">Apply</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Topic</th>
+                  <th>Payload</th>
+                  <th>QoS</th>
+                  <th>Retain</th>
+                </tr>
+              </thead>
+              <tbody id="messages-body">
+                <tr>
+                  <td colspan="5" class="muted">Loading data...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2>Top topics</h2>
+          </div>
+          <div id="topic-stats" class="list two-columns"></div>
+        </section>
+      </section>
+
+      <section id="tab-process" class="tab-panel">
+        <section class="card-grid">
+          <article class="card stat-card">
+            <span class="stat-label">Current phase</span>
+            <strong id="process-phase">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Telemetry connectivity</span>
+            <strong id="process-connectivity">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Controller disconnected signal</span>
+            <strong id="process-controller-disconnect">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Operating mode</span>
+            <strong id="process-mode">-</strong>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2>Process flow</h2>
+          </div>
+          <div id="flow-steps" class="flow-steps"></div>
+        </section>
+
+        <section class="content-grid">
+          <article class="card">
+            <div class="card-header">
+              <h2>Cycle analytics</h2>
+            </div>
+            <div id="cycle-stats" class="list"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h2>Signal cadence</h2>
+            </div>
+            <div id="cadence-stats" class="list"></div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="card">
+            <div class="card-header">
+              <h2>Recent process changes</h2>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Signal</th>
+                    <th>Previous</th>
+                    <th>Current</th>
+                  </tr>
+                </thead>
+                <tbody id="changes-body">
+                  <tr>
+                    <td colspan="4" class="muted">Loading process changes...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h2>Current status snapshot</h2>
+            </div>
+            <div id="latest-status" class="list"></div>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2>Process insights</h2>
+          </div>
+          <div id="process-insights" class="insight-list"></div>
+        </section>
+      </section>
+
+      <section id="tab-oee" class="tab-panel">
+        <section class="card-grid">
+          <article class="card stat-card">
+            <span class="stat-label">Estimated OEE</span>
+            <strong id="oee-total">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Availability</span>
+            <strong id="oee-availability">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Performance</span>
+            <strong id="oee-performance">-</strong>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Quality</span>
+            <strong id="oee-quality">-</strong>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="card">
+            <div class="card-header">
+              <h2>OEE losses</h2>
+            </div>
+            <div id="oee-losses" class="list"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h2>OEE basis</h2>
+            </div>
+            <div id="oee-basis" class="list"></div>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2>Process flow for OEE context</h2>
+          </div>
+          <div id="oee-flow-steps" class="flow-steps"></div>
+        </section>
+
+        <section class="content-grid">
+          <article class="card">
+            <div class="card-header">
+              <h2>Calculation assumptions</h2>
+            </div>
+            <div id="oee-assumptions" class="insight-list"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <h2>Interpretation</h2>
+            </div>
+            <div id="oee-interpretation" class="insight-list"></div>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const REFRESH_MS = {{ refresh_seconds * 1000 }};
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function formatTimestamp(value) {
+        if (!value) return "-";
+        return new Date(value).toLocaleString();
+      }
+
+      function renderList(containerId, items, labelKey, valueKey) {
+        const container = document.getElementById(containerId);
+        if (!items.length) {
+          container.innerHTML = '<div class="muted">No data</div>';
+          return;
+        }
+
+        container.innerHTML = items
+          .map(
+            (item) => `
+              <div class="list-row">
+                <span class="list-label">${escapeHtml(item[labelKey] || "-")}</span>
+                <span class="list-value">${escapeHtml(item[valueKey] || 0)}</span>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      async function loadSummary() {
+        const response = await fetch("/api/summary");
+        const data = await response.json();
+
+        document.getElementById("total-messages").textContent = data.total_messages ?? "-";
+        document.getElementById("unique-topics").textContent = data.unique_topics ?? "-";
+        document.getElementById("messages-last-15m").textContent = data.messages_last_15m ?? "-";
+        document.getElementById("last-received").textContent = formatTimestamp(data.last_received_at);
+
+        document.getElementById("latest-topic").textContent = data.latest_message?.topic || "-";
+        document.getElementById("latest-payload").textContent = data.latest_message?.payload_text || "-";
+        document.getElementById("latest-time").textContent = formatTimestamp(data.latest_message?.received_at);
+
+        renderList("top-sites", data.top_sites || [], "site", "message_count");
+      }
+
+      async function loadMessages() {
+        const limit = document.getElementById("message-limit").value;
+        const topicFilter = document.getElementById("topic-filter").value;
+        const params = new URLSearchParams({ limit, topic_filter: topicFilter });
+        const response = await fetch(`/api/messages?${params.toString()}`);
+        const data = await response.json();
+        const body = document.getElementById("messages-body");
+
+        if (!data.items.length) {
+          body.innerHTML = '<tr><td colspan="5" class="muted">No messages found.</td></tr>';
+          return;
+        }
+
+        body.innerHTML = data.items
+          .map(
+            (item) => `
+              <tr>
+                <td>${formatTimestamp(item.received_at)}</td>
+                <td class="topic-cell">${escapeHtml(item.topic)}</td>
+                <td><code>${escapeHtml(item.payload_text ?? "")}</code></td>
+                <td>${escapeHtml(item.qos)}</td>
+                <td>${escapeHtml(item.retain)}</td>
+              </tr>
+            `
+          )
+          .join("");
+      }
+
+      async function loadTopicStats() {
+        const response = await fetch("/api/topic-stats?limit=20");
+        const data = await response.json();
+        const container = document.getElementById("topic-stats");
+
+        if (!data.items.length) {
+          container.innerHTML = '<div class="muted">No topic stats available.</div>';
+          return;
+        }
+
+        container.innerHTML = data.items
+          .map(
+            (item) => `
+              <div class="list-row">
+                <span class="list-label">${escapeHtml(item.topic)}</span>
+                <span class="list-value">${escapeHtml(item.message_count)}</span>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderMetricList(containerId, entries) {
+        const container = document.getElementById(containerId);
+        if (!entries.length) {
+          container.innerHTML = '<div class="muted">No data</div>';
+          return;
+        }
+
+        container.innerHTML = entries
+          .map(
+            (entry) => `
+              <div class="list-row">
+                <span class="list-label">${escapeHtml(entry.label)}</span>
+                <span class="list-value">${escapeHtml(entry.value)}</span>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function formatPercent(value) {
+        return value === null || value === undefined ? "-" : `${value.toFixed ? value.toFixed(1) : value}%`;
+      }
+
+      async function loadProcessFlow() {
+        const response = await fetch("/api/process-flow");
+        const data = await response.json();
+
+        document.getElementById("process-phase").textContent = data.current_phase ?? "-";
+        document.getElementById("process-connectivity").textContent = data.telemetry_connectivity ?? "-";
+        document.getElementById("process-controller-disconnect").textContent = data.controller_disconnected_signal ?? "-";
+        document.getElementById("process-mode").textContent = data.mode ?? "-";
+
+        const flowSteps = document.getElementById("flow-steps");
+        flowSteps.innerHTML = (data.flow_steps || [])
+          .map(
+            (step) => `
+              <div class="flow-step flow-${escapeHtml(step.state)}">
+                <div class="flow-title">${escapeHtml(step.title)}</div>
+                <div class="flow-value">${escapeHtml(step.value)}</div>
+                <div class="muted">${escapeHtml(step.detail)}</div>
+              </div>
+            `
+          )
+          .join("");
+
+        renderMetricList("cycle-stats", [
+          { label: "Valid numeric points", value: data.cycle_stats?.numeric_points ?? "-" },
+          { label: "Average cycle time [s]", value: data.cycle_stats?.avg_cycle_time_s ?? "-" },
+          { label: "Max cycle time [s]", value: data.cycle_stats?.max_cycle_time_s ?? "-" },
+          { label: "Min cycle time [s]", value: data.cycle_stats?.min_cycle_time_s ?? "-" },
+        ]);
+
+        renderList("cadence-stats", data.cadence_last_15m || [], "category", "message_count");
+
+        const changesBody = document.getElementById("changes-body");
+        if (!(data.recent_changes || []).length) {
+          changesBody.innerHTML = '<tr><td colspan="4" class="muted">No process changes found.</td></tr>';
+        } else {
+          changesBody.innerHTML = data.recent_changes
+            .map(
+              (item) => `
+                <tr>
+                  <td>${formatTimestamp(item.received_at)}</td>
+                  <td>${escapeHtml(item.label)}</td>
+                  <td><code>${escapeHtml(item.previous_value ?? "-")}</code></td>
+                  <td><code>${escapeHtml(item.payload_text ?? "-")}</code></td>
+                </tr>
+              `
+            )
+            .join("");
+        }
+
+        const latestStatus = document.getElementById("latest-status");
+        latestStatus.innerHTML = (data.latest_status || [])
+          .map(
+            (item) => `
+              <div class="list-row">
+                <span class="list-label">${escapeHtml(item.label)}</span>
+                <span class="list-value">${escapeHtml(item.payload_text ?? "-")}</span>
+              </div>
+            `
+          )
+          .join("");
+
+        const insights = document.getElementById("process-insights");
+        if (!(data.insights || []).length) {
+          insights.innerHTML = '<div class="muted">No process insights available.</div>';
+        } else {
+          insights.innerHTML = data.insights
+            .map((item) => `<div class="insight-item">${escapeHtml(item)}</div>`)
+            .join("");
+        }
+      }
+
+      async function loadOee() {
+        const response = await fetch("/api/oee");
+        const data = await response.json();
+
+        document.getElementById("oee-total").textContent = data.oee_pct === null ? "N/A" : `${data.oee_pct.toFixed(1)}%`;
+        document.getElementById("oee-availability").textContent = data.availability_pct === null ? "N/A" : `${data.availability_pct.toFixed(1)}%`;
+        document.getElementById("oee-performance").textContent = data.performance_pct === null ? "N/A" : `${data.performance_pct.toFixed(1)}%`;
+        document.getElementById("oee-quality").textContent = data.quality_pct === null ? "N/A" : `${data.quality_pct.toFixed(1)}%`;
+
+        renderMetricList("oee-losses", (data.losses || []).map((item) => ({
+          label: item.label,
+          value: `${item.value_pct.toFixed(1)}%`,
+        })));
+
+        renderMetricList("oee-basis", [
+          { label: "Window", value: `${data.window_minutes} min` },
+          { label: "Phase", value: data.current_phase ?? "-" },
+          { label: "Telemetry", value: data.telemetry_connectivity ?? "-" },
+          { label: "Positive cycle samples", value: data.positive_cycle_samples ?? "-" },
+          { label: "Average positive cycle [s]", value: data.avg_positive_cycle_time_s ?? "-" },
+          { label: "Reference cycle [s]", value: data.reference_cycle_time_s ?? "-" },
+          { label: "Running true samples", value: data.running_true_samples ?? "-" },
+          { label: "Paused true samples", value: data.paused_true_samples ?? "-" },
+        ]);
+
+        const flow = document.getElementById("oee-flow-steps");
+        flow.innerHTML = (data.flow_steps || [])
+          .map(
+            (step) => `
+              <div class="flow-step flow-${escapeHtml(step.state)}">
+                <div class="flow-title">${escapeHtml(step.title)}</div>
+                <div class="flow-value">${escapeHtml(step.value)}</div>
+                <div class="muted">${escapeHtml(step.detail)}</div>
+              </div>
+            `
+          )
+          .join("");
+
+        const assumptions = document.getElementById("oee-assumptions");
+        assumptions.innerHTML = (data.assumptions || [])
+          .map((item) => `<div class="insight-item">${escapeHtml(item)}</div>`)
+          .join("");
+
+        const interpretationItems = [
+          `Estimated OEE is ${data.oee_pct === null ? "not available" : `${data.oee_pct.toFixed(1)}%`} for the selected observation window.`,
+          `Performance reason: ${data.performance_reason}`,
+          `Quality reason: ${data.quality_reason}`,
+          `Telemetry status used for context: ${data.telemetry_connectivity} (${data.telemetry_connectivity_detail}).`,
+        ];
+        const interpretation = document.getElementById("oee-interpretation");
+        interpretation.innerHTML = interpretationItems
+          .map((item) => `<div class="insight-item">${escapeHtml(item)}</div>`)
+          .join("");
+      }
+
+      function initTabs() {
+        const buttons = document.querySelectorAll(".tab-button");
+        const panels = document.querySelectorAll(".tab-panel");
+
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const tab = button.dataset.tab;
+            buttons.forEach((item) => item.classList.toggle("is-active", item === button));
+            panels.forEach((panel) => panel.classList.toggle("is-active", panel.id === `tab-${tab}`));
+          });
+        });
+      }
+
+      async function refreshAll() {
+        await Promise.all([loadSummary(), loadMessages(), loadTopicStats(), loadProcessFlow(), loadOee()]);
+      }
+
+      document.getElementById("apply-filter").addEventListener("click", () => {
+        loadMessages();
+      });
+
+      initTabs();
+      refreshAll();
+      setInterval(refreshAll, REFRESH_MS);
+    </script>
+  </body>
+</html>

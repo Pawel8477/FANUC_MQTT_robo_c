@@ -1,0 +1,61 @@
+name: fanuc-mqtt
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: fanuc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  collector:
+    build:
+      context: ./collector
+    container_name: fanuc-collector
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      MQTT_HOST: ${MQTT_HOST}
+      MQTT_PORT: ${MQTT_PORT}
+      MQTT_TOPIC: ${MQTT_TOPIC}
+      MQTT_CLIENT_ID: ${MQTT_CLIENT_ID}
+      MQTT_KEEPALIVE: ${MQTT_KEEPALIVE}
+      MQTT_INSECURE_HOSTNAME: ${MQTT_INSECURE_HOSTNAME}
+      MQTT_CA_CERT: /certs/ca.crt
+      MQTT_CLIENT_CERT: /certs/DBR77.crt
+      MQTT_CLIENT_KEY: /certs/DBR77.key
+    volumes:
+      - "${CERTS_HOST_PATH}:/certs:ro"
+
+  dashboard:
+    build:
+      context: ./dashboard
+    container_name: fanuc-dashboard
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    ports:
+      - "${DASHBOARD_PORT}:8000"
+
+volumes:
+  postgres_data:
+    external: true
+    name: fanuc-mqtt-postgres_postgres_data

@@ -1,0 +1,6 @@
+.DS_Store
+.env
+certy/
+exports/
+__pycache__/
+*.pyc
