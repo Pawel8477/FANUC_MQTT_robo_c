@@ -24,20 +24,32 @@ i 8-kanałową płytkę przekaźnikową **Dingtian DTWONDER**.
 - [x] Diagnostyka serwera HA — pierwotnie HA OS na Raspberry Pi „nie odpowiadał"
 - [x] Przeniesiono serwer na **Dell 9020**; „No bootable devices found" = zły **Boot Mode**
 - [x] **Naprawione:** przełączenie BIOS na **UEFI** → system ruszył z dysku
-- [x] HA wstał, adres w sieci lokalnej: **`http://192.168.8.50:8123`** (do potwierdzenia)
-- [ ] Potwierdzić, że panel HA się ładuje (`curl -I http://192.168.8.50:8123` z Maca)
-- [ ] Sprawdzić/uruchomić dodatek **Mosquitto broker** + integrację MQTT
-- [ ] Wgrać `packages/nawadnianie.yaml` + dashboard
-- [ ] Ustawić na płytce Dingtian broker = `192.168.8.50`, zarezerwować stałe IP w routerze
+- [x] HA wstał, adres w sieci lokalnej: **`http://192.168.8.50:8123`**
+- [x] **Potwierdzone (2026-06-30):** panel HA się ładuje — `HTTP 200`, ~4 ms z Maca
+- [ ] Sprawdzić/uruchomić dodatek **Mosquitto broker** + integrację MQTT — *port 1883 jeszcze zamknięty (do instalacji)*
+- [ ] Wgrać `packages/nawadnianie.yaml` + dashboard — *brak SSH/Samby, potrzebny File Editor / VS Code add-on lub włączenie Samby*
+- [ ] Ustawić na płytce Dingtian broker = `192.168.8.50`, zarezerwować stałe IP w routerze — *płytka nieosiągalna pod `…8.100/1.100/7.1`, do zlokalizowania/podłączenia*
 - [ ] Zweryfikować ruch MQTT i przetestować strefy
 
-## Następny krok
-Z Maca (Terminal) potwierdź, że HA odpowiada:
-```bash
-curl -I http://192.168.8.50:8123
-```
-Potem: Mosquitto → wgranie package → konfiguracja MQTT na płytce → test stref.
+### Diagnostyka sieci (2026-06-30, z Maca `192.168.8.29`)
+| Cel | Wynik |
+|-----|-------|
+| `192.168.8.50:8123` (panel HA) | ✅ `HTTP 200`, ~4 ms |
+| `192.168.8.50:4357` (HAOS Observer) | ✅ otwarty → to **Home Assistant OS** z Supervisorem (add-ony dostępne) |
+| `192.168.8.50:1883` (Mosquitto/MQTT) | ❌ zamknięty → broker jeszcze nie postawiony |
+| `192.168.8.50:22` (SSH) / `:445` (Samba) | ❌ zamknięte → brak ścieżki sieciowej do `/config` |
+| Płytka Dingtian (`…8.100/1.100/7.1`) | ❌ nieosiągalna → DHCP/offline, do zlokalizowania |
 
-> Uwaga środowiskowa: ta sesja Claude działa w chmurze (izolowany kontener Linux),
-> więc nie ma dostępu do sieci lokalnej `192.168.x.x`. Testy sieciowe wykonujemy
-> z Maca, albo odpalając Claude Code lokalnie w terminalu Maca.
+## Następny krok
+Panel HA potwierdzony. Kolejność:
+1. **Mosquitto broker** — Settings → Add-ons → Add-on Store → *Mosquitto broker* → Install → Start (+ „Start on boot"). Załóż użytkownika MQTT (np. `ha`).
+2. **Integracja MQTT** — Settings → Devices & Services → Add Integration → MQTT → broker `core-mosquitto` (lub `192.168.8.50`), port `1883`.
+3. **Wgranie wsadu** — przez **File Editor** lub **Studio Code Server** add-on: utwórz `/config/packages/nawadnianie.yaml` (treść z tego repo) i w `configuration.yaml` dodaj `homeassistant: packages: !include_dir_named packages`. Restart.
+4. **Dashboard** — wklej `lovelace_nawadnianie.yaml` w edytorze karty (tryb YAML).
+5. **Płytka Dingtian** — zlokalizuj IP (skan sieci / panel routera), ustaw broker `192.168.8.50:1883`, zarezerwuj stałe IP po MAC.
+6. **Test** — `mosquitto_sub -h 192.168.8.50 -u ha -P <hasło> -t '#' -v`, włącz „Strefę 1".
+
+> Uwaga środowiskowa: ta sesja ma dostęp do sieci lokalnej (Mac `192.168.8.29`,
+> HA odpowiada na `192.168.8.50`). Operacje wewnątrz HA (instalacja add-onów,
+> integracja MQTT, zapis do `/config`) wymagają logowania do panelu HA — do zrobienia
+> w UI albo przez automatyzację przeglądarki po zalogowaniu.
