@@ -38,7 +38,7 @@ i 8-kanałową płytkę przekaźnikową **Dingtian DTWONDER**.
 | `192.168.8.50:4357` (HAOS Observer) | ✅ otwarty → to **Home Assistant OS** z Supervisorem (add-ony dostępne) |
 | `192.168.8.50:1883` (Mosquitto/MQTT) | ❌ zamknięty → broker jeszcze nie postawiony |
 | `192.168.8.50:22` (SSH) / `:445` (Samba) | ❌ zamknięte → brak ścieżki sieciowej do `/config` |
-| Płytka Dingtian (`…8.100/1.100/7.1`) | ❌ nieosiągalna → DHCP/offline, do zlokalizowania |
+| Płytka Dingtian | ❌ **nie ma jej w sieci** — skan całego `192.168.8.0/24` (11 żywych hostów) nie pokazał panelu płytki; `.49` = serwer Ubuntu (lighttpd), `.211` = panel innego urządzenia, `.1` = router. Płytka niezasilona lub niedołączona do WiFi → krok fizyczny |
 
 ## Następny krok
 Panel HA potwierdzony. Kolejność:
