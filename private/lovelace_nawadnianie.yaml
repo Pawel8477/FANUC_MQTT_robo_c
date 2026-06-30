@@ -1,0 +1,39 @@
+# Karta Lovelace - wklej w trybie YAML (Edycja dashboardu -> Edytuj w YAML)
+type: vertical-stack
+cards:
+  - type: entities
+    title: Nawadnianie - sterowanie
+    entities:
+      - entity: input_boolean.nawadnianie_master
+      - entity: input_boolean.nawadnianie_blokada_deszcz
+      - entity: input_datetime.nawadnianie_godzina_startu
+      - type: divider
+      - entity: script.nawadnianie_sekwencja
+        name: ▶ Uruchom teraz
+      - entity: script.nawadnianie_stop
+        name: ⏹ STOP
+
+  - type: glance
+    title: Strefy (stan zaworów)
+    columns: 4
+    entities:
+      - entity: switch.strefa_1
+      - entity: switch.strefa_2
+      - entity: switch.strefa_3
+      - entity: switch.strefa_4
+      - entity: switch.strefa_5
+      - entity: switch.strefa_6
+      - entity: switch.strefa_7
+      - entity: switch.strefa_8
+
+  - type: entities
+    title: Czasy podlewania (min)
+    entities:
+      - entity: input_number.nawadnianie_strefa_1_czas
+      - entity: input_number.nawadnianie_strefa_2_czas
+      - entity: input_number.nawadnianie_strefa_3_czas
+      - entity: input_number.nawadnianie_strefa_4_czas
+      - entity: input_number.nawadnianie_strefa_5_czas
+      - entity: input_number.nawadnianie_strefa_6_czas
+      - entity: input_number.nawadnianie_strefa_7_czas
+      - entity: input_number.nawadnianie_strefa_8_czas

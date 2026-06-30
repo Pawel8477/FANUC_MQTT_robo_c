@@ -1,0 +1,322 @@
+# =============================================================================
+#  NAWADNIANIE - Dingtian DTWONDER 8CH (MQTT przez WiFi)
+#  Home Assistant package: 8 stref + czasy + harmonogram + sekwencja
+# =============================================================================
+#  Założenia:
+#   - Płytka steruje 8 zaworami elektromagnetycznymi (solenoid NC).
+#     Przekaźnik ON  = zawór otwarty = woda leci.
+#   - Łączymy po WiFi (tryb STA - patrz README), broker MQTT w Home Assistant.
+#   - Strefy podlewane SEKWENCYJNIE (jedna po drugiej), żeby starczyło ciśnienia.
+#
+#  Topici MQTT (dopasuj w panelu płytki albo tutaj):
+#     komenda ->  dingtian/relay01/relay/r{N}/set     payload: ON / OFF
+#     stan    ->  dingtian/relay01/relay/r{N}         payload: ON / OFF
+#     LWT     ->  dingtian/relay01/availability       online / offline
+#  Podgląd realnego ruchu:  mosquitto_sub -h <broker> -t '#' -v
+# =============================================================================
+
+# --------------------------- STREFY (przekaźniki) ----------------------------
+mqtt:
+  switch:
+    - name: "Strefa 1"
+      unique_id: nawadnianie_strefa_1
+      icon: mdi:sprinkler
+      command_topic: "dingtian/relay01/relay/r1/set"
+      state_topic: "dingtian/relay01/relay/r1"
+      payload_on: "ON"
+      payload_off: "OFF"
+      state_on: "ON"
+      state_off: "OFF"
+      optimistic: false
+      qos: 1
+      availability_topic: "dingtian/relay01/availability"
+      payload_available: "online"
+      payload_not_available: "offline"
+      device: &dingtian_device
+        identifiers: dingtian_dtwonder_nawadnianie
+        name: "Nawadnianie (Dingtian 8CH)"
+        manufacturer: "Dingtian"
+        model: "DTWONDER 8 Channel Relay Board"
+
+    - name: "Strefa 2"
+      unique_id: nawadnianie_strefa_2
+      icon: mdi:sprinkler
+      command_topic: "dingtian/relay01/relay/r2/set"
+      state_topic: "dingtian/relay01/relay/r2"
+      payload_on: "ON"
+      payload_off: "OFF"
+      state_on: "ON"
+      state_off: "OFF"
+      optimistic: false
+      qos: 1
+      availability_topic: "dingtian/relay01/availability"
+      payload_available: "online"
+      payload_not_available: "offline"
+      device: *dingtian_device
+
+    - name: "Strefa 3"
+      unique_id: nawadnianie_strefa_3
+      icon: mdi:sprinkler
+      command_topic: "dingtian/relay01/relay/r3/set"
+      state_topic: "dingtian/relay01/relay/r3"
+      payload_on: "ON"
+      payload_off: "OFF"
+      state_on: "ON"
+      state_off: "OFF"
+      optimistic: false
+      qos: 1
+      availability_topic: "dingtian/relay01/availability"
+      payload_available: "online"
+      payload_not_available: "offline"
+      device: *dingtian_device
+
+    - name: "Strefa 4"
+      unique_id: nawadnianie_strefa_4
+      icon: mdi:sprinkler
+      command_topic: "dingtian/relay01/relay/r4/set"
+      state_topic: "dingtian/relay01/relay/r4"
+      payload_on: "ON"
+      payload_off: "OFF"
+      state_on: "ON"
+      state_off: "OFF"
+      optimistic: false
+      qos: 1
+      availability_topic: "dingtian/relay01/availability"
+      payload_available: "online"
+      payload_not_available: "offline"
+      device: *dingtian_device
+
+    - name: "Strefa 5"
+      unique_id: nawadnianie_strefa_5
+      icon: mdi:sprinkler
+      command_topic: "dingtian/relay01/relay/r5/set"
+      state_topic: "dingtian/relay01/relay/r5"
+      payload_on: "ON"
+      payload_off: "OFF"
+      state_on: "ON"
+      state_off: "OFF"
+      optimistic: false
+      qos: 1
+      availability_topic: "dingtian/relay01/availability"
+      payload_available: "online"
+      payload_not_available: "offline"
+      device: *dingtian_device
+
+    - name: "Strefa 6"
+      unique_id: nawadnianie_strefa_6
+      icon: mdi:sprinkler
+      command_topic: "dingtian/relay01/relay/r6/set"
+      state_topic: "dingtian/relay01/relay/r6"
+      payload_on: "ON"
+      payload_off: "OFF"
+      state_on: "ON"
+      state_off: "OFF"
+      optimistic: false
+      qos: 1
+      availability_topic: "dingtian/relay01/availability"
+      payload_available: "online"
+      payload_not_available: "offline"
+      device: *dingtian_device
+
+    - name: "Strefa 7"
+      unique_id: nawadnianie_strefa_7
+      icon: mdi:sprinkler
+      command_topic: "dingtian/relay01/relay/r7/set"
+      state_topic: "dingtian/relay01/relay/r7"
+      payload_on: "ON"
+      payload_off: "OFF"
+      state_on: "ON"
+      state_off: "OFF"
+      optimistic: false
+      qos: 1
+      availability_topic: "dingtian/relay01/availability"
+      payload_available: "online"
+      payload_not_available: "offline"
+      device: *dingtian_device
+
+    - name: "Strefa 8"
+      unique_id: nawadnianie_strefa_8
+      icon: mdi:sprinkler
+      command_topic: "dingtian/relay01/relay/r8/set"
+      state_topic: "dingtian/relay01/relay/r8"
+      payload_on: "ON"
+      payload_off: "OFF"
+      state_on: "ON"
+      state_off: "OFF"
+      optimistic: false
+      qos: 1
+      availability_topic: "dingtian/relay01/availability"
+      payload_available: "online"
+      payload_not_available: "offline"
+      device: *dingtian_device
+
+# ----------------------------- USTAWIENIA (helpers) --------------------------
+# Czas podlewania każdej strefy w minutach (0 = pomiń strefę)
+input_number:
+  nawadnianie_strefa_1_czas:
+    name: "Strefa 1 - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+  nawadnianie_strefa_2_czas:
+    name: "Strefa 2 - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+  nawadnianie_strefa_3_czas:
+    name: "Strefa 3 - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+  nawadnianie_strefa_4_czas:
+    name: "Strefa 4 - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+  nawadnianie_strefa_5_czas:
+    name: "Strefa 5 - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+  nawadnianie_strefa_6_czas:
+    name: "Strefa 6 - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+  nawadnianie_strefa_7_czas:
+    name: "Strefa 7 - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+  nawadnianie_strefa_8_czas:
+    name: "Strefa 8 - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+
+input_boolean:
+  nawadnianie_master:
+    name: "Nawadnianie aktywne"
+    icon: mdi:water-pump
+  nawadnianie_blokada_deszcz:
+    name: "Blokada (deszcz)"
+    icon: mdi:weather-rainy
+
+input_datetime:
+  nawadnianie_godzina_startu:
+    name: "Godzina startu"
+    has_date: false
+    has_time: true
+    icon: mdi:clock-start
+
+# ------------------------------- SKRYPTY -------------------------------------
+script:
+  # Pełna sekwencja: strefy jedna po drugiej, wg ustawionych czasów
+  nawadnianie_sekwencja:
+    alias: "Nawadnianie - pełna sekwencja"
+    icon: mdi:play-circle
+    mode: restart
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.nawadnianie_blokada_deszcz
+                state: "on"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "Nawadnianie"
+                  message: "Pominięto - aktywna blokada (deszcz)."
+        default:
+          - repeat:
+              for_each:
+                - { strefa: "switch.strefa_1", czas: "input_number.nawadnianie_strefa_1_czas" }
+                - { strefa: "switch.strefa_2", czas: "input_number.nawadnianie_strefa_2_czas" }
+                - { strefa: "switch.strefa_3", czas: "input_number.nawadnianie_strefa_3_czas" }
+                - { strefa: "switch.strefa_4", czas: "input_number.nawadnianie_strefa_4_czas" }
+                - { strefa: "switch.strefa_5", czas: "input_number.nawadnianie_strefa_5_czas" }
+                - { strefa: "switch.strefa_6", czas: "input_number.nawadnianie_strefa_6_czas" }
+                - { strefa: "switch.strefa_7", czas: "input_number.nawadnianie_strefa_7_czas" }
+                - { strefa: "switch.strefa_8", czas: "input_number.nawadnianie_strefa_8_czas" }
+              sequence:
+                # pomiń strefę gdy czas = 0
+                - condition: template
+                  value_template: "{{ states(repeat.item.czas) | int(0) > 0 }}"
+                - service: switch.turn_on
+                  target:
+                    entity_id: "{{ repeat.item.strefa }}"
+                - delay:
+                    minutes: "{{ states(repeat.item.czas) | int(0) }}"
+                - service: switch.turn_off
+                  target:
+                    entity_id: "{{ repeat.item.strefa }}"
+                - delay: "00:00:03"   # przerwa między strefami (ochrona pompy/zaworów)
+
+  # Awaryjne wyłączenie wszystkiego
+  nawadnianie_stop:
+    alias: "Nawadnianie - STOP"
+    icon: mdi:stop-circle
+    sequence:
+      - service: script.turn_off
+        target:
+          entity_id: script.nawadnianie_sekwencja
+      - service: switch.turn_off
+        target:
+          entity_id:
+            - switch.strefa_1
+            - switch.strefa_2
+            - switch.strefa_3
+            - switch.strefa_4
+            - switch.strefa_5
+            - switch.strefa_6
+            - switch.strefa_7
+            - switch.strefa_8
+
+# ------------------------------ AUTOMATYZACJE --------------------------------
+automation:
+  - id: nawadnianie_auto_start
+    alias: "Nawadnianie - start o zadanej godzinie"
+    trigger:
+      - platform: time
+        at: input_datetime.nawadnianie_godzina_startu
+    condition:
+      - condition: state
+        entity_id: input_boolean.nawadnianie_master
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.nawadnianie_blokada_deszcz
+        state: "off"
+    action:
+      - service: script.turn_on
+        target:
+          entity_id: script.nawadnianie_sekwencja
+
+  # Bezpiecznik: jeśli płytka offline (LWT), powiadom
+  - id: nawadnianie_offline_alarm
+    alias: "Nawadnianie - sterownik offline"
+    trigger:
+      - platform: state
+        entity_id: switch.strefa_1
+        to: "unavailable"
+        for: "00:02:00"
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "Nawadnianie"
+          message: "Sterownik Dingtian jest niedostępny (sprawdź WiFi / zasilanie)."
