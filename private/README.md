@@ -30,15 +30,20 @@ i 8-kanałową płytkę przekaźnikową **Dingtian DTWONDER**.
 - [x] **Mosquitto broker** zainstalowany + uruchomiony (start przy starcie); port `1883` otwarty ✅ (2026-07-01)
 - [x] **Integracja MQTT** dodana (broker `core-mosquitto` z dodatku)
 - [x] **Wgrano wsad** — plik jako `/config/nawadnianie.yaml`, w `configuration.yaml` dodano `homeassistant: packages: { nawadnianie: !include nawadnianie.yaml }`. `check_config` → **valid**, po restarcie encje wczytane
-- [x] **Encje działają** — 8× `switch.strefa_N`, 8× `input_number`, `input_boolean` (master/blokada), `input_datetime`, 2 skrypty, 2 automatyzacje. Strefy `unavailable` (płytka offline — oczekiwane)
-- [x] **Dashboard** — osobny panel „Nawadnianie" (`/nawadnianie-panel/main`, w pasku bocznym): sterowanie + stan stref + suwaki czasów
-- [ ] Ustawić na płytce Dingtian broker = `192.168.8.50`, zarezerwować stałe IP w routerze — *płytka wciąż nieosiągalna (skan `/24` bez płytki), do zasilenia/podłączenia do WiFi*
-- [ ] Zweryfikować ruch MQTT i przetestować strefy (po podłączeniu płytki)
+- [x] **Helpery/skrypty/automatyzacje/dashboard** wczytane — panel „Nawadnianie" (`/nawadnianie-panel/main`)
+- [x] **Samba share** (2026-07-01) — dodatek dla folderów HA na SSD (`config/media/share/backup…`), login `homeassistant`. HDD 1 TB zostawiony (HAOS nie udostępnia osobnego dysku przez Sambę)
+- [x] **Płytka Dingtian podłączona** (2026-07-01) — po **Ethernecie**, IP **`192.168.8.51`** (panel `admin`/`admin`)
+- [x] **MQTT na płytce** — broker `192.168.8.50:1883`, TLS off, Head‑slash on, login **`dingtian`** (dodany w Mosquitto → Logins), MFR `dingtian`, Area `relay01`
+- [x] **HA MQTT Discovery** (przycisk „HA Discover" w panelu płytki) — auto‑utworzone `switch.dingtian_relay63699_r1..8` (żywe) + `binary_sensor…_i1..8` (8 wejść)
+- [x] **Encje działają na sprzęcie** — wykryte przełączniki **przemianowano na `switch.strefa_1..8`** (rename w rejestrze), stan `off`/available. Skrypty/automatyzacje/dashboard działają na realnych przekaźnikach
+- [ ] Test end‑to‑end „na mokro" (fizyczne otwarcie zaworu) — do zrobienia świadomie, gdy podłączone woda/zawory
+- [ ] (opcjonalnie) zarezerwować stałe IP `.51` po MAC w routerze; ustawić czasy stref + godzinę startu
 
-> **Ważne (poprawka wdrożeniowa):** blok `device:` powodował długie `entity_id`
-> (`switch.nawadnianie_dingtian_8ch_strefa_N`). Do każdego przełącznika dodano
-> **`object_id: strefa_N`**, żeby `entity_id` = `switch.strefa_N` (zgodne ze skryptami,
-> automatyzacjami i dashboardem). Wdrożone encje dodatkowo przemianowano w rejestrze.
+> **Zmiana podejścia (2026-07-01):** zrezygnowano z ręcznych `mqtt: switch:` w pakiecie
+> (zgadywane topici się nie pokrywały z firmware). Zamiast tego płytka publikuje encje
+> przez **HA MQTT Discovery**, a te przemianowano na `switch.strefa_N`. Pakiet zawiera już
+> tylko helpery + skrypty + automatyzacje + dashboard.
+> **Loginy MQTT/Samba** (do zmiany): broker `dingtian`/`Dingtian7z-Mqtt`, Samba `homeassistant`/`Nawadn-Str8-Kq72xz`.
 
 ### Diagnostyka sieci (2026-06-30, z Maca `192.168.8.29`)
 | Cel | Wynik |
@@ -49,12 +54,15 @@ i 8-kanałową płytkę przekaźnikową **Dingtian DTWONDER**.
 | `192.168.8.50:22` (SSH) / `:445` (Samba) | ❌ zamknięte → brak ścieżki sieciowej do `/config` |
 | Płytka Dingtian | ❌ **nie ma jej w sieci** — skan całego `192.168.8.0/24` (11 żywych hostów) nie pokazał panelu płytki; `.49` = serwer Ubuntu (lighttpd), `.211` = panel innego urządzenia, `.1` = router. Płytka niezasilona lub niedołączona do WiFi → krok fizyczny |
 
-## Następny krok — **została już tylko płytka**
-Cała strona HA gotowa (broker, integracja, wsad, encje, dashboard). Zostało fizyczne podłączenie sterownika:
-1. **Zasil płytkę Dingtian** i podłącz ją do WiFi (tryb STA — patrz `nawadnianie-home-assistant.md`, Krok 1).
-2. Namierz jej IP (panel routera / skan sieci) i **zarezerwuj stałe IP** po MAC.
-3. W panelu płytki (zakładka **MQTT**): broker `192.168.8.50`, port `1883`, user/hasło jak w Mosquitto, topici zgodne z packagem (`dingtian/relay01/relay/r{N}` + `.../availability`).
-4. **Test** z Maca: `mosquitto_sub -h 192.168.8.50 -u ha -P <hasło> -t '#' -v`, potem w panelu „Nawadnianie" włącz „Strefę 1" — na brokerze powinna pojawić się komenda, a strefy zmienią stan z `unavailable` na `off/on`.
+## Stan: **system kompletny i działa** ✅
+Broker + integracja MQTT + płytka (Discovery) + helpery/skrypty/automatyzacje + dashboard + Samba.
+`switch.strefa_1..8` są żywe (`off`) i sterują realnymi przekaźnikami.
 
-> Uwaga: gdy płytka będzie online, encje `switch.strefa_N` same wyjdą z `unavailable`
-> (mają `availability_topic` na LWT). Dopóki jest offline — to normalne, że pokazują „niedostępny".
+### Co zostało (drobne / świadome)
+1. **Test „na mokro"** — włączenie strefy fizycznie otworzy zawór. Zrób to świadomie, gdy podłączone woda/zawory (w panelu „Nawadnianie" → „Uruchom teraz" albo przełącz `switch.strefa_1`).
+2. **Ustaw czasy stref + godzinę startu** (np. 6:00) i włącz „Nawadnianie aktywne".
+3. **Zarezerwuj stałe IP `.51`** po MAC w routerze (żeby się nie zmieniło).
+4. **Zmień hasła** MQTT/Samba (patrz notka wyżej) — są w historii czatu.
+
+### Wejścia (bonus)
+Discovery dało też `binary_sensor.dingtian_relay63699_i1..8` (8 wejść płytki) — można podpiąć np. czujnik deszczu pod `input_boolean.nawadnianie_blokada_deszcz` przez prostą automatyzację.
