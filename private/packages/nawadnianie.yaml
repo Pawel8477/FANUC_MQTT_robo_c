@@ -20,6 +20,7 @@ mqtt:
   switch:
     - name: "Strefa 1"
       unique_id: nawadnianie_strefa_1
+      object_id: strefa_1
       icon: mdi:sprinkler
       command_topic: "dingtian/relay01/relay/r1/set"
       state_topic: "dingtian/relay01/relay/r1"
@@ -40,6 +41,7 @@ mqtt:
 
     - name: "Strefa 2"
       unique_id: nawadnianie_strefa_2
+      object_id: strefa_2
       icon: mdi:sprinkler
       command_topic: "dingtian/relay01/relay/r2/set"
       state_topic: "dingtian/relay01/relay/r2"
@@ -56,6 +58,7 @@ mqtt:
 
     - name: "Strefa 3"
       unique_id: nawadnianie_strefa_3
+      object_id: strefa_3
       icon: mdi:sprinkler
       command_topic: "dingtian/relay01/relay/r3/set"
       state_topic: "dingtian/relay01/relay/r3"
@@ -72,6 +75,7 @@ mqtt:
 
     - name: "Strefa 4"
       unique_id: nawadnianie_strefa_4
+      object_id: strefa_4
       icon: mdi:sprinkler
       command_topic: "dingtian/relay01/relay/r4/set"
       state_topic: "dingtian/relay01/relay/r4"
@@ -88,6 +92,7 @@ mqtt:
 
     - name: "Strefa 5"
       unique_id: nawadnianie_strefa_5
+      object_id: strefa_5
       icon: mdi:sprinkler
       command_topic: "dingtian/relay01/relay/r5/set"
       state_topic: "dingtian/relay01/relay/r5"
@@ -104,6 +109,7 @@ mqtt:
 
     - name: "Strefa 6"
       unique_id: nawadnianie_strefa_6
+      object_id: strefa_6
       icon: mdi:sprinkler
       command_topic: "dingtian/relay01/relay/r6/set"
       state_topic: "dingtian/relay01/relay/r6"
@@ -120,6 +126,7 @@ mqtt:
 
     - name: "Strefa 7"
       unique_id: nawadnianie_strefa_7
+      object_id: strefa_7
       icon: mdi:sprinkler
       command_topic: "dingtian/relay01/relay/r7/set"
       state_topic: "dingtian/relay01/relay/r7"
@@ -136,6 +143,7 @@ mqtt:
 
     - name: "Strefa 8"
       unique_id: nawadnianie_strefa_8
+      object_id: strefa_8
       icon: mdi:sprinkler
       command_topic: "dingtian/relay01/relay/r8/set"
       state_topic: "dingtian/relay01/relay/r8"
