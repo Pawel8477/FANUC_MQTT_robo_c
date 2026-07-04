@@ -24,7 +24,6 @@ cards:
       - entity: switch.strefa_5
       - entity: switch.strefa_6
       - entity: switch.strefa_7
-      - entity: switch.strefa_8
 
   - type: entities
     title: Czasy podlewania (min)
@@ -36,4 +35,3 @@ cards:
       - entity: input_number.nawadnianie_strefa_5_czas
       - entity: input_number.nawadnianie_strefa_6_czas
       - entity: input_number.nawadnianie_strefa_7_czas
-      - entity: input_number.nawadnianie_strefa_8_czas

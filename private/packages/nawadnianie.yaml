@@ -69,13 +69,9 @@ input_number:
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
-  nawadnianie_strefa_8_czas:
-    name: "Strefa 8 - czas (min)"
-    min: 0
-    max: 60
-    step: 1
-    unit_of_measurement: "min"
-    icon: mdi:timer-outline
+
+# Uwaga: fizycznie 7 stref (7 zaworów + wspólny). Przekaznik 8 (switch.strefa_8
+# z Discovery) pozostaje jako zapas i NIE jest uzywany w logice nawadniania.
 
 input_boolean:
   nawadnianie_master:
@@ -120,7 +116,6 @@ script:
                 - { strefa: "switch.strefa_5", czas: "input_number.nawadnianie_strefa_5_czas" }
                 - { strefa: "switch.strefa_6", czas: "input_number.nawadnianie_strefa_6_czas" }
                 - { strefa: "switch.strefa_7", czas: "input_number.nawadnianie_strefa_7_czas" }
-                - { strefa: "switch.strefa_8", czas: "input_number.nawadnianie_strefa_8_czas" }
               sequence:
                 # pomiń strefę gdy czas = 0
                 - condition: template
@@ -153,7 +148,6 @@ script:
             - switch.strefa_5
             - switch.strefa_6
             - switch.strefa_7
-            - switch.strefa_8
 
 # ------------------------------ AUTOMATYZACJE --------------------------------
 automation:

@@ -36,6 +36,7 @@ i 8-kanałową płytkę przekaźnikową **Dingtian DTWONDER**.
 - [x] **MQTT na płytce** — broker `192.168.8.50:1883`, TLS off, Head‑slash on, login **`dingtian`** (dodany w Mosquitto → Logins), MFR `dingtian`, Area `relay01`
 - [x] **HA MQTT Discovery** (przycisk „HA Discover" w panelu płytki) — auto‑utworzone `switch.dingtian_relay63699_r1..8` (żywe) + `binary_sensor…_i1..8` (8 wejść)
 - [x] **Encje działają na sprzęcie** — wykryte przełączniki **przemianowano na `switch.strefa_1..8`** (rename w rejestrze), stan `off`/available. Skrypty/automatyzacje/dashboard działają na realnych przekaźnikach
+- [x] **Redukcja do 7 stref** (2026-07-04) — fizycznie 7 zaworów (7 przewodów + wspólny do rozdzielni, zasilacz Rain Bird 24 V AC). Usunięto strefę 8 z helperów/sekwencji/STOP/dashboardu. `switch.strefa_8` (przekaźnik 8) zostaje jako **zapas**, poza logiką nawadniania. Elektryka: COM transformatora → mostek COM przekaźników 1–7, przewody stref → NO 1–7, wspólny → drugi zacisk transformatora (patrz `podlaczenie-elektryczne` w historii czatu)
 - [ ] Test end‑to‑end „na mokro" (fizyczne otwarcie zaworu) — do zrobienia świadomie, gdy podłączone woda/zawory
 - [ ] (opcjonalnie) zarezerwować stałe IP `.51` po MAC w routerze; ustawić czasy stref + godzinę startu
 
