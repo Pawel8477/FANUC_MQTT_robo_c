@@ -36,7 +36,16 @@ i 8-kanałową płytkę przekaźnikową **Dingtian DTWONDER**.
 - [x] **MQTT na płytce** — broker `192.168.8.50:1883`, TLS off, Head‑slash on, login **`dingtian`** (dodany w Mosquitto → Logins), MFR `dingtian`, Area `relay01`
 - [x] **HA MQTT Discovery** (przycisk „HA Discover" w panelu płytki) — auto‑utworzone `switch.dingtian_relay63699_r1..8` (żywe) + `binary_sensor…_i1..8` (8 wejść)
 - [x] **Encje działają na sprzęcie** — wykryte przełączniki **przemianowano na `switch.strefa_1..8`** (rename w rejestrze), stan `off`/available. Skrypty/automatyzacje/dashboard działają na realnych przekaźnikach
-- [x] **Redukcja do 7 stref** (2026-07-04) — fizycznie 7 zaworów (7 przewodów + wspólny do rozdzielni, zasilacz Rain Bird 24 V AC). Usunięto strefę 8 z helperów/sekwencji/STOP/dashboardu. `switch.strefa_8` (przekaźnik 8) zostaje jako **zapas**, poza logiką nawadniania. Elektryka: COM transformatora → mostek COM przekaźników 1–7, przewody stref → NO 1–7, wspólny → drugi zacisk transformatora (patrz `podlaczenie-elektryczne` w historii czatu)
+- [x] **7 stref + nazwy + mapa przekaźników** (2026-07-16) — szafka podłączona fizycznie (Rain Bird 24 V AC). Realne mapowanie: **wolny jest przekaźnik `r6`**, a `r8` jest używany. Poprawiono pakiet i dashboard (przywrócono `strefa_8`, usunięto `strefa_6` z logiki):
+  - `r1` `switch.strefa_1` → **Trawnik taras**
+  - `r2` `switch.strefa_2` → **Kroplówka ogródek tył**
+  - `r3` `switch.strefa_3` → **Kroplówka rabata taras**
+  - `r4` `switch.strefa_4` → **Ogródek grządki**
+  - `r5` `switch.strefa_5` → **Szklarnia**
+  - `r6` `switch.strefa_6` → **wolny (zapas)**
+  - `r7` `switch.strefa_7` → **Linia tuje**
+  - `r8` `switch.strefa_8` → **Rabata przód**
+  - Nazwy stref nadane w dashboardzie przez `name:` (bez zmiany nazw w rejestrze encji)
 - [ ] Test end‑to‑end „na mokro" (fizyczne otwarcie zaworu) — do zrobienia świadomie, gdy podłączone woda/zawory
 - [ ] (opcjonalnie) zarezerwować stałe IP `.51` po MAC w routerze; ustawić czasy stref + godzinę startu
 

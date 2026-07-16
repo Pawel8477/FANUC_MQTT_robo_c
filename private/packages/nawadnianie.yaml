@@ -16,62 +16,71 @@
 # =============================================================================
 
 # Przelaczniki stref pochodza z HA MQTT Discovery plytki Dingtian (przycisk 'HA Discover').
-# Encje switch.strefa_1..8 = przemianowane switch.dingtian_relayXXXXX_rN (rename w rejestrze encji).
-# Dlatego pakiet NIE definiuje juz recznych mqtt: switch — plytka sama je publikuje.
+# Encje switch.strefa_N = przemianowane switch.dingtian_relayXXXXX_rN (rename w rejestrze encji).
+# Dlatego pakiet NIE definiuje recznych mqtt: switch — plytka sama je publikuje.
+#
+# MAPA STREF (fizyczne podlaczenie szafki, 7 zaworow):
+#   r1 = switch.strefa_1  -> Trawnik taras
+#   r2 = switch.strefa_2  -> Kroplowka ogrodek tyl
+#   r3 = switch.strefa_3  -> Kroplowka rabata taras
+#   r4 = switch.strefa_4  -> Ogrodek grzadki
+#   r5 = switch.strefa_5  -> Szklarnia
+#   r6 = switch.strefa_6  -> WOLNY (zapas) - poza logika nawadniania
+#   r7 = switch.strefa_7  -> Linia tuje
+#   r8 = switch.strefa_8  -> Rabata przod
 
 input_number:
   nawadnianie_strefa_1_czas:
-    name: "Strefa 1 - czas (min)"
+    name: "Trawnik taras - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_2_czas:
-    name: "Strefa 2 - czas (min)"
+    name: "Kroplowka ogrodek tyl - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_3_czas:
-    name: "Strefa 3 - czas (min)"
+    name: "Kroplowka rabata taras - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_4_czas:
-    name: "Strefa 4 - czas (min)"
+    name: "Ogrodek grzadki - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_5_czas:
-    name: "Strefa 5 - czas (min)"
-    min: 0
-    max: 60
-    step: 1
-    unit_of_measurement: "min"
-    icon: mdi:timer-outline
-  nawadnianie_strefa_6_czas:
-    name: "Strefa 6 - czas (min)"
+    name: "Szklarnia - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_7_czas:
-    name: "Strefa 7 - czas (min)"
+    name: "Linia tuje - czas (min)"
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+  nawadnianie_strefa_8_czas:
+    name: "Rabata przod - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
 
-# Uwaga: fizycznie 7 stref (7 zaworów + wspólny). Przekaznik 8 (switch.strefa_8
-# z Discovery) pozostaje jako zapas i NIE jest uzywany w logice nawadniania.
+# Uwaga: r6 (switch.strefa_6) jest WOLNY (zapas) i NIE ma wpisu tutaj ani w sekwencji.
 
 input_boolean:
   nawadnianie_master:
@@ -109,13 +118,13 @@ script:
         default:
           - repeat:
               for_each:
-                - { strefa: "switch.strefa_1", czas: "input_number.nawadnianie_strefa_1_czas" }
-                - { strefa: "switch.strefa_2", czas: "input_number.nawadnianie_strefa_2_czas" }
-                - { strefa: "switch.strefa_3", czas: "input_number.nawadnianie_strefa_3_czas" }
-                - { strefa: "switch.strefa_4", czas: "input_number.nawadnianie_strefa_4_czas" }
-                - { strefa: "switch.strefa_5", czas: "input_number.nawadnianie_strefa_5_czas" }
-                - { strefa: "switch.strefa_6", czas: "input_number.nawadnianie_strefa_6_czas" }
-                - { strefa: "switch.strefa_7", czas: "input_number.nawadnianie_strefa_7_czas" }
+                - { strefa: "switch.strefa_1", czas: "input_number.nawadnianie_strefa_1_czas" }  # Trawnik taras
+                - { strefa: "switch.strefa_2", czas: "input_number.nawadnianie_strefa_2_czas" }  # Kroplowka ogrodek tyl
+                - { strefa: "switch.strefa_3", czas: "input_number.nawadnianie_strefa_3_czas" }  # Kroplowka rabata taras
+                - { strefa: "switch.strefa_4", czas: "input_number.nawadnianie_strefa_4_czas" }  # Ogrodek grzadki
+                - { strefa: "switch.strefa_5", czas: "input_number.nawadnianie_strefa_5_czas" }  # Szklarnia
+                - { strefa: "switch.strefa_7", czas: "input_number.nawadnianie_strefa_7_czas" }  # Linia tuje
+                - { strefa: "switch.strefa_8", czas: "input_number.nawadnianie_strefa_8_czas" }  # Rabata przod
               sequence:
                 # pomiń strefę gdy czas = 0
                 - condition: template
@@ -146,8 +155,8 @@ script:
             - switch.strefa_3
             - switch.strefa_4
             - switch.strefa_5
-            - switch.strefa_6
             - switch.strefa_7
+            - switch.strefa_8
 
 # ------------------------------ AUTOMATYZACJE --------------------------------
 automation:

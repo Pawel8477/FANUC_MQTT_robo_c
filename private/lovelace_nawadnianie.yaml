@@ -1,4 +1,5 @@
 # Karta Lovelace - wklej w trybie YAML (Edycja dashboardu -> Edytuj w YAML)
+# Nazwy stref nadane per-encja (name:) - nie trzeba zmieniac nazw w rejestrze HA.
 type: vertical-stack
 cards:
   - type: entities
@@ -18,20 +19,34 @@ cards:
     columns: 4
     entities:
       - entity: switch.strefa_1
+        name: Trawnik taras
       - entity: switch.strefa_2
+        name: Kroplówka ogr. tył
       - entity: switch.strefa_3
+        name: Kroplówka rabata
       - entity: switch.strefa_4
+        name: Ogródek grządki
       - entity: switch.strefa_5
-      - entity: switch.strefa_6
+        name: Szklarnia
       - entity: switch.strefa_7
+        name: Linia tuje
+      - entity: switch.strefa_8
+        name: Rabata przód
 
   - type: entities
     title: Czasy podlewania (min)
     entities:
       - entity: input_number.nawadnianie_strefa_1_czas
+        name: Trawnik taras
       - entity: input_number.nawadnianie_strefa_2_czas
+        name: Kroplówka ogródek tył
       - entity: input_number.nawadnianie_strefa_3_czas
+        name: Kroplówka rabata taras
       - entity: input_number.nawadnianie_strefa_4_czas
+        name: Ogródek grządki
       - entity: input_number.nawadnianie_strefa_5_czas
-      - entity: input_number.nawadnianie_strefa_6_czas
+        name: Szklarnia
       - entity: input_number.nawadnianie_strefa_7_czas
+        name: Linia tuje
+      - entity: input_number.nawadnianie_strefa_8_czas
+        name: Rabata przód
