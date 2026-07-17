@@ -190,3 +190,44 @@ automation:
         data:
           title: "Nawadnianie"
           message: "Sterownik Dingtian jest niedostępny (sprawdź WiFi / zasilanie)."
+
+  # Auto-blokada wg prognozy deszczu (Met.no)
+  - id: nawadnianie_rain_check
+    alias: "Nawadnianie - blokada wg prognozy deszczu"
+    trigger:
+      - platform: time
+        at: "05:45:00"
+      - platform: homeassistant
+        event: start
+    action:
+      - service: weather.get_forecasts
+        target:
+          entity_id: weather.forecast_dom
+        data:
+          type: daily
+        response_variable: fc
+      - variables:
+          f0: "{{ (fc['weather.forecast_dom'].forecast | default([]))[0] | default({}) }}"
+          rain_mm: "{{ f0.precipitation | float(0) }}"
+          cond: "{{ f0.condition | default('unknown') }}"
+          will_rain: "{{ rain_mm >= 2 or cond in ['rainy','pouring','lightning-rainy','snowy','snowy-rainy','hail'] }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ will_rain }}"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.nawadnianie_blokada_deszcz
+              - service: persistent_notification.create
+                data:
+                  notification_id: nawadnianie_rain
+                  title: "Nawadnianie - blokada deszczowa"
+                  message: "Prognoza: {{ cond }}, opad {{ rain_mm }} mm. Podlewanie dzis pominiete."
+        default:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.nawadnianie_blokada_deszcz
+          - service: persistent_notification.dismiss
+            data:
+              notification_id: nawadnianie_rain
