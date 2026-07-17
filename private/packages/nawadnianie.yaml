@@ -214,3 +214,28 @@ automation:
           - service: persistent_notification.dismiss
             data:
               notification_id: nawadnianie_rain
+
+  # Bezpiecznik: zawor otwarty za dlugo (np. przerwana sekwencja) -> wymus zamkniecie
+  - id: nawadnianie_watchdog
+    alias: "Nawadnianie - bezpiecznik (zawor za dlugo otwarty)"
+    trigger:
+      - platform: state
+        entity_id:
+          - switch.strefa_1
+          - switch.strefa_2
+          - switch.strefa_3
+          - switch.strefa_4
+          - switch.strefa_5
+          - switch.strefa_6
+          - switch.strefa_7
+          - switch.strefa_8
+        to: "on"
+        for: "01:05:00"
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: "{{ trigger.entity_id }}"
+      - service: persistent_notification.create
+        data:
+          title: "Nawadnianie - bezpiecznik"
+          message: "Zawor {{ trigger.entity_id }} byl otwarty ponad 65 min - wymuszono zamkniecie."
