@@ -1,33 +1,11 @@
 # =============================================================================
-#  NAWADNIANIE - Dingtian DTWONDER 8CH (MQTT przez WiFi)
-#  Home Assistant package: 8 stref + czasy + harmonogram + sekwencja
+#  NAWADNIANIE - Dingtian DTWONDER 8CH (HA MQTT Discovery)
+#  Package: 7 stref (r6 rezerwa) + czasy + harmonogram + sekwencja + STOP
+#  + auto-blokada wg prognozy deszczu (Met.no) + per-strefa 'podlewaj mimo deszczu'
 # =============================================================================
-#  Założenia:
-#   - Płytka steruje 8 zaworami elektromagnetycznymi (solenoid NC).
-#     Przekaźnik ON  = zawór otwarty = woda leci.
-#   - Łączymy po WiFi (tryb STA - patrz README), broker MQTT w Home Assistant.
-#   - Strefy podlewane SEKWENCYJNIE (jedna po drugiej), żeby starczyło ciśnienia.
-#
-#  Topici MQTT (dopasuj w panelu płytki albo tutaj):
-#     komenda ->  dingtian/relay01/relay/r{N}/set     payload: ON / OFF
-#     stan    ->  dingtian/relay01/relay/r{N}         payload: ON / OFF
-#     LWT     ->  dingtian/relay01/availability       online / offline
-#  Podgląd realnego ruchu:  mosquitto_sub -h <broker> -t '#' -v
-# =============================================================================
-
-# Przelaczniki stref pochodza z HA MQTT Discovery plytki Dingtian (przycisk 'HA Discover').
-# Encje switch.strefa_N = przemianowane switch.dingtian_relayXXXXX_rN (rename w rejestrze encji).
-# Dlatego pakiet NIE definiuje recznych mqtt: switch — plytka sama je publikuje.
-#
-# MAPA STREF (fizyczne podlaczenie szafki, 7 zaworow):
-#   r1 = switch.strefa_1  -> Trawnik taras
-#   r2 = switch.strefa_2  -> Kroplowka ogrodek tyl
-#   r3 = switch.strefa_3  -> Kroplowka rabata taras
-#   r4 = switch.strefa_4  -> Ogrodek grzadki
-#   r5 = switch.strefa_5  -> Szklarnia
-#   r6 = switch.strefa_6  -> WOLNY (zapas) - poza logika nawadniania
-#   r7 = switch.strefa_7  -> Linia tuje
-#   r8 = switch.strefa_8  -> Rabata przod
+# Encje switch.strefa_1..8 pochodza z HA MQTT Discovery plytki Dingtian.
+# Mapa: r1 Trawnik taras | r2 Kroplowka ogrodek tyl | r3 Kroplowka rabata taras
+#       r4 Ogrodek grzadki | r5 Szklarnia | r6 REZERWA | r7 Linia tuje | r8 Rabata przod
 
 input_number:
   nawadnianie_strefa_1_czas:
@@ -38,21 +16,21 @@ input_number:
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_2_czas:
-    name: "Kroplowka ogrodek tyl - czas (min)"
+    name: "Kroplówka ogródek tył - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_3_czas:
-    name: "Kroplowka rabata taras - czas (min)"
+    name: "Kroplówka rabata taras - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_4_czas:
-    name: "Ogrodek grzadki - czas (min)"
+    name: "Ogródek grządki - czas (min)"
     min: 0
     max: 60
     step: 1
@@ -73,14 +51,12 @@ input_number:
     unit_of_measurement: "min"
     icon: mdi:timer-outline
   nawadnianie_strefa_8_czas:
-    name: "Rabata przod - czas (min)"
+    name: "Rabata przód - czas (min)"
     min: 0
     max: 60
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
-
-# Uwaga: r6 (switch.strefa_6) jest WOLNY (zapas) i NIE ma wpisu tutaj ani w sekwencji.
 
 input_boolean:
   nawadnianie_master:
@@ -89,6 +65,27 @@ input_boolean:
   nawadnianie_blokada_deszcz:
     name: "Blokada (deszcz)"
     icon: mdi:weather-rainy
+  nawadnianie_strefa_1_pomin_deszcz:
+    name: "Trawnik taras - podlewaj mimo deszczu"
+    icon: mdi:weather-sunny-alert
+  nawadnianie_strefa_2_pomin_deszcz:
+    name: "Kroplówka ogródek tył - podlewaj mimo deszczu"
+    icon: mdi:weather-sunny-alert
+  nawadnianie_strefa_3_pomin_deszcz:
+    name: "Kroplówka rabata taras - podlewaj mimo deszczu"
+    icon: mdi:weather-sunny-alert
+  nawadnianie_strefa_4_pomin_deszcz:
+    name: "Ogródek grządki - podlewaj mimo deszczu"
+    icon: mdi:weather-sunny-alert
+  nawadnianie_strefa_5_pomin_deszcz:
+    name: "Szklarnia - podlewaj mimo deszczu"
+    icon: mdi:weather-sunny-alert
+  nawadnianie_strefa_7_pomin_deszcz:
+    name: "Linia tuje - podlewaj mimo deszczu"
+    icon: mdi:weather-sunny-alert
+  nawadnianie_strefa_8_pomin_deszcz:
+    name: "Rabata przód - podlewaj mimo deszczu"
+    icon: mdi:weather-sunny-alert
 
 input_datetime:
   nawadnianie_godzina_startu:
@@ -97,38 +94,30 @@ input_datetime:
     has_time: true
     icon: mdi:clock-start
 
-# ------------------------------- SKRYPTY -------------------------------------
 script:
-  # Pełna sekwencja: strefy jedna po drugiej, wg ustawionych czasów
   nawadnianie_sekwencja:
-    alias: "Nawadnianie - pełna sekwencja"
+    alias: "Nawadnianie - pelna sekwencja"
     icon: mdi:play-circle
     mode: restart
     sequence:
-      - choose:
-          - conditions:
-              - condition: state
-                entity_id: input_boolean.nawadnianie_blokada_deszcz
-                state: "on"
-            sequence:
-              - service: persistent_notification.create
-                data:
-                  title: "Nawadnianie"
-                  message: "Pominięto - aktywna blokada (deszcz)."
-        default:
-          - repeat:
-              for_each:
-                - { strefa: "switch.strefa_1", czas: "input_number.nawadnianie_strefa_1_czas" }  # Trawnik taras
-                - { strefa: "switch.strefa_2", czas: "input_number.nawadnianie_strefa_2_czas" }  # Kroplowka ogrodek tyl
-                - { strefa: "switch.strefa_3", czas: "input_number.nawadnianie_strefa_3_czas" }  # Kroplowka rabata taras
-                - { strefa: "switch.strefa_4", czas: "input_number.nawadnianie_strefa_4_czas" }  # Ogrodek grzadki
-                - { strefa: "switch.strefa_5", czas: "input_number.nawadnianie_strefa_5_czas" }  # Szklarnia
-                - { strefa: "switch.strefa_7", czas: "input_number.nawadnianie_strefa_7_czas" }  # Linia tuje
-                - { strefa: "switch.strefa_8", czas: "input_number.nawadnianie_strefa_8_czas" }  # Rabata przod
-              sequence:
-                # pomiń strefę gdy czas = 0
+      - repeat:
+          for_each:
+            - { strefa: "switch.strefa_1", czas: "input_number.nawadnianie_strefa_1_czas", pomin: "input_boolean.nawadnianie_strefa_1_pomin_deszcz" }  # Trawnik taras
+            - { strefa: "switch.strefa_2", czas: "input_number.nawadnianie_strefa_2_czas", pomin: "input_boolean.nawadnianie_strefa_2_pomin_deszcz" }  # Kroplówka ogródek tył
+            - { strefa: "switch.strefa_3", czas: "input_number.nawadnianie_strefa_3_czas", pomin: "input_boolean.nawadnianie_strefa_3_pomin_deszcz" }  # Kroplówka rabata taras
+            - { strefa: "switch.strefa_4", czas: "input_number.nawadnianie_strefa_4_czas", pomin: "input_boolean.nawadnianie_strefa_4_pomin_deszcz" }  # Ogródek grządki
+            - { strefa: "switch.strefa_5", czas: "input_number.nawadnianie_strefa_5_czas", pomin: "input_boolean.nawadnianie_strefa_5_pomin_deszcz" }  # Szklarnia
+            - { strefa: "switch.strefa_7", czas: "input_number.nawadnianie_strefa_7_czas", pomin: "input_boolean.nawadnianie_strefa_7_pomin_deszcz" }  # Linia tuje
+            - { strefa: "switch.strefa_8", czas: "input_number.nawadnianie_strefa_8_czas", pomin: "input_boolean.nawadnianie_strefa_8_pomin_deszcz" }  # Rabata przód
+          sequence:
+            # Podlej strefe gdy: czas > 0 ORAZ (brak blokady deszczu LUB strefa ma 'podlewaj mimo deszczu')
+            - if:
                 - condition: template
-                  value_template: "{{ states(repeat.item.czas) | int(0) > 0 }}"
+                  value_template: >
+                    {{ states(repeat.item.czas) | int(0) > 0
+                       and (is_state('input_boolean.nawadnianie_blokada_deszcz','off')
+                            or is_state(repeat.item.pomin,'on')) }}
+              then:
                 - service: switch.turn_on
                   target:
                     entity_id: "{{ repeat.item.strefa }}"
@@ -137,9 +126,8 @@ script:
                 - service: switch.turn_off
                   target:
                     entity_id: "{{ repeat.item.strefa }}"
-                - delay: "00:00:03"   # przerwa między strefami (ochrona pompy/zaworów)
+                - delay: "00:00:03"
 
-  # Awaryjne wyłączenie wszystkiego
   nawadnianie_stop:
     alias: "Nawadnianie - STOP"
     icon: mdi:stop-circle
@@ -158,7 +146,6 @@ script:
             - switch.strefa_7
             - switch.strefa_8
 
-# ------------------------------ AUTOMATYZACJE --------------------------------
 automation:
   - id: nawadnianie_auto_start
     alias: "Nawadnianie - start o zadanej godzinie"
@@ -169,15 +156,12 @@ automation:
       - condition: state
         entity_id: input_boolean.nawadnianie_master
         state: "on"
-      - condition: state
-        entity_id: input_boolean.nawadnianie_blokada_deszcz
-        state: "off"
+    # Uwaga: brak warunku blokady - sekwencja sama pomija strefy wg deszczu/wyjatkow
     action:
       - service: script.turn_on
         target:
           entity_id: script.nawadnianie_sekwencja
 
-  # Bezpiecznik: jeśli płytka offline (LWT), powiadom
   - id: nawadnianie_offline_alarm
     alias: "Nawadnianie - sterownik offline"
     trigger:
@@ -189,9 +173,8 @@ automation:
       - service: persistent_notification.create
         data:
           title: "Nawadnianie"
-          message: "Sterownik Dingtian jest niedostępny (sprawdź WiFi / zasilanie)."
+          message: "Sterownik Dingtian jest niedostepny (sprawdz WiFi / zasilanie)."
 
-  # Auto-blokada wg prognozy deszczu (Met.no)
   - id: nawadnianie_rain_check
     alias: "Nawadnianie - blokada wg prognozy deszczu"
     trigger:
@@ -223,7 +206,7 @@ automation:
                 data:
                   notification_id: nawadnianie_rain
                   title: "Nawadnianie - blokada deszczowa"
-                  message: "Prognoza: {{ cond }}, opad {{ rain_mm }} mm. Podlewanie dzis pominiete."
+                  message: "Prognoza: {{ cond }}, opad {{ rain_mm }} mm. Strefy bez wyjatku pominiete."
         default:
           - service: input_boolean.turn_off
             target:
