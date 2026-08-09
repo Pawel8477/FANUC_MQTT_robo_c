@@ -1,11 +1,10 @@
 # =============================================================================
 #  NAWADNIANIE - Dingtian DTWONDER 8CH (HA MQTT Discovery)
-#  Package: 7 stref (r6 rezerwa) + czasy + harmonogram + sekwencja + STOP
-#  + auto-blokada wg prognozy deszczu (Met.no) + per-strefa 'podlewaj mimo deszczu'
+#  7 aktywnych stref (r7 rezerwa) + czasy + harmonogram + sekwencja + STOP
+#  + auto-blokada wg prognozy deszczu (Met.no) + per-strefa 'podlewaj mimo deszczu' + bezpiecznik
 # =============================================================================
-# Encje switch.strefa_1..8 pochodza z HA MQTT Discovery plytki Dingtian.
-# Mapa: r1 Trawnik taras | r2 Kroplowka ogrodek tyl | r3 Kroplowka rabata taras
-#       r4 Ogrodek grzadki | r5 Szklarnia | r6 REZERWA | r7 Linia tuje | r8 Rabata przod
+# Mapa (poprawiona): r1 Trawnik taras | r2 Kroplowka ogrodek tyl | r3 Kroplowka rabata taras
+#   r4 Ogrodek grzadki | r5 Szklarnia | r6 Linia tuje | r7 REZERWA (wolny) | r8 Rabata przod
 
 input_number:
   nawadnianie_strefa_1_czas:
@@ -43,7 +42,7 @@ input_number:
     step: 1
     unit_of_measurement: "min"
     icon: mdi:timer-outline
-  nawadnianie_strefa_7_czas:
+  nawadnianie_strefa_6_czas:
     name: "Linia tuje - czas (min)"
     min: 0
     max: 60
@@ -80,7 +79,7 @@ input_boolean:
   nawadnianie_strefa_5_pomin_deszcz:
     name: "Szklarnia - podlewaj mimo deszczu"
     icon: mdi:weather-sunny-alert
-  nawadnianie_strefa_7_pomin_deszcz:
+  nawadnianie_strefa_6_pomin_deszcz:
     name: "Linia tuje - podlewaj mimo deszczu"
     icon: mdi:weather-sunny-alert
   nawadnianie_strefa_8_pomin_deszcz:
@@ -107,10 +106,9 @@ script:
             - { strefa: "switch.strefa_3", czas: "input_number.nawadnianie_strefa_3_czas", pomin: "input_boolean.nawadnianie_strefa_3_pomin_deszcz" }  # Kroplówka rabata taras
             - { strefa: "switch.strefa_4", czas: "input_number.nawadnianie_strefa_4_czas", pomin: "input_boolean.nawadnianie_strefa_4_pomin_deszcz" }  # Ogródek grządki
             - { strefa: "switch.strefa_5", czas: "input_number.nawadnianie_strefa_5_czas", pomin: "input_boolean.nawadnianie_strefa_5_pomin_deszcz" }  # Szklarnia
-            - { strefa: "switch.strefa_7", czas: "input_number.nawadnianie_strefa_7_czas", pomin: "input_boolean.nawadnianie_strefa_7_pomin_deszcz" }  # Linia tuje
+            - { strefa: "switch.strefa_6", czas: "input_number.nawadnianie_strefa_6_czas", pomin: "input_boolean.nawadnianie_strefa_6_pomin_deszcz" }  # Linia tuje
             - { strefa: "switch.strefa_8", czas: "input_number.nawadnianie_strefa_8_czas", pomin: "input_boolean.nawadnianie_strefa_8_pomin_deszcz" }  # Rabata przód
           sequence:
-            # Podlej strefe gdy: czas > 0 ORAZ (brak blokady deszczu LUB strefa ma 'podlewaj mimo deszczu')
             - if:
                 - condition: template
                   value_template: >
@@ -143,6 +141,7 @@ script:
             - switch.strefa_3
             - switch.strefa_4
             - switch.strefa_5
+            - switch.strefa_6
             - switch.strefa_7
             - switch.strefa_8
 
@@ -156,7 +155,6 @@ automation:
       - condition: state
         entity_id: input_boolean.nawadnianie_master
         state: "on"
-    # Uwaga: brak warunku blokady - sekwencja sama pomija strefy wg deszczu/wyjatkow
     action:
       - service: script.turn_on
         target:
@@ -215,7 +213,6 @@ automation:
             data:
               notification_id: nawadnianie_rain
 
-  # Bezpiecznik: zawor otwarty za dlugo (np. przerwana sekwencja) -> wymus zamkniecie
   - id: nawadnianie_watchdog
     alias: "Nawadnianie - bezpiecznik (zawor za dlugo otwarty)"
     trigger:
