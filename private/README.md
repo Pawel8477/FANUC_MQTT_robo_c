@@ -1,7 +1,7 @@
 # Smart Home — dokumentacja (private)
 
-Zbiór notatek i konfiguracji do domowego nawadniania opartego o Home Assistant
-i 8-kanałową płytkę przekaźnikową **Dingtian DTWONDER**.
+Zbiór notatek i konfiguracji do domowej automatyki opartej o Home Assistant —
+nawadnianie (płytka **Dingtian DTWONDER**), system grzewczy i sprzęt serwerowy.
 
 ## Spis treści
 | Plik | Co zawiera |
@@ -11,6 +11,7 @@ i 8-kanałową płytkę przekaźnikową **Dingtian DTWONDER**.
 | `lovelace_nawadnianie.yaml` | Karta na dashboard (sterowanie + stan stref + czasy) |
 | `ha-raspberry-pi-rescue.md` | Ratunek i reinstalacja Home Assistant OS na Raspberry Pi |
 | `dell-9020-no-boot.md` | Diagnostyka Dell 9020 „No bootable devices found" + postawienie HA na tym sprzęcie |
+| `pompa-ciepla-bufor-strategia.md` | System grzewczy: pompa ciepła + bufor 1000 l + kominek + PV na opuście — strategia pracy i COP |
 
 ## Sprzęt
 - **Sterownik:** Dingtian DTWONDER, 8× przekaźnik (NC/COM/NO) + 8× wejście (I1–I8)
